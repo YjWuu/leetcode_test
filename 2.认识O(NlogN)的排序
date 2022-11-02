@@ -1,1 +1,127 @@
-
+知识：master公式(等效子过程)
+  T(N) = a * T(N / b) + O(N ^ d)
+  其中 a是子过程的个数，b是子过程的规模， d是除子过程外的其他代码
+  1) log(b, a) > d   ->   复杂度为o(N ^ log(b, a))
+  2) log(b, a) = d   ->   复杂度为o(N ^ d * logN)
+  3) log(b, a) < d   ->   复杂度为o(N ^ d))
+ 
+1.使用递归求最大值
+  代码：
+  public static int getMax(int[] arr) {
+    return process(arr, 0, arr.length - 1);
+  } 
+  
+  public static int process(int[] arr, int L, int R) {
+    if (L == R) {
+      return arr[L];
+    }
+    int mid = L + ((R - L) >> 1);
+    int leftMax = process(arr, L, mid);
+    int rightMax = process(arr, mid + 1, R);
+    return Math.max(leftMax, rightMax);
+  }
+  
+  
+  
+2.归并排序(时间复杂度O(N*logN)，额外空间复杂度O(N))
+  整体就是一个简单递归，左边排好序，右边排好序，让其整体有序
+  代码：
+  public static void mergeSort(int[] arr) {
+    if (arr == null || arr.length < 2) {
+      return;
+    }
+    process(arr, 0, arr.length - 1);
+  }
+  
+  public static void process(int[] arr, int L, int R) {
+    if (L == R) {
+      return;
+    }
+    int mid = L + ((R - L) >> 1);
+    process(arr, L, mid);
+    process(arr, mid + 1, R);
+    merge(arr, L, mid, R);
+  }
+  
+  public static void merge(int[] arr, int L, int M, int R) {
+    int[] help = new int[R - L + 1];
+    int i = 0;
+    int p1 = L; 
+    int p2 = M + 1;
+    while (p1 <= M && p2 <= R) {
+      help[i++] = arr[p1] <= arr[p2] ? arr[p1++] : arr[p2++];
+    }
+    while (p1 <= M) {
+      help[i++] = arr[p1++];
+    }
+    while (p2 <= R) {
+      help[i++] = arr[p2++];
+    }
+    for (i = 0; i < help.length; i++) {
+      arr[L + i] = help[i];
+    }
+  }
+  
+  使用master公式求解归并排序时间复杂度：
+  T(N) = 2T(N / 2) + O(N)
+  故a = 2, b = 2, d = 1
+  log(b, a) = d
+  所以时间复杂度为O(N * logN)
+ 
+ 
+ 
+ 3.归并排序的拓展
+  1)小和问题
+  在一个数组中，每一个数左边比当前数小的数累加起来，叫做这个数组的小和。求一个数组的小和。
+  例子:[1,3,4,2,5] 1左边比1小的数，没有; 3左边比3小的数，1; 4左边比4小的数，1、3; 2左边比2小的数，1; 5左边比5小的数，1、3、4、2; 所以小和为1+1+3+1+1+3+4+2=16
+  2)逆序对问题 
+  在一个数组中，左边的数如果比右边的数大，则这两个数构成一个逆序对，请打印所有逆序对。
+  例子:[3,2,4,5,0] 中的(3,2)、(3,0)......
+  代码：
+  1)与归并差异：相等时先拷贝右边的
+  public static int process(int[] arr, int L, int R) {
+    if (L == R) {
+      return 0;
+    }
+    int mid = L + ((R - L) >> 1);
+    //左边merge + 右边merge + 整体merge
+    return process(arr, L, mid) + process(arr, mid + 1, R) + merge(arr, L, mid, R);
+  }
+  
+  public static int merge(int[] arr, int L, int m, int R) {
+    int[] help = new int[R - L + 1];
+    int i = 0;
+    int p1 = L;
+    int p2 = m + 1;
+    int res = 0;
+    while (p1 <= m && p2 <= r) {
+      res += arr[p1] < arr[p2] ? (R - p2 + 1) * arr[p1] : 0;
+      help[i++] = arr[p1] < arr[p2] ? arr[p1++] : arr[p2++];
+    }
+    while (p1 <= m) {
+      help[i++] = arr[p1++];
+    }
+    while (p2 <= R) {
+      help[i++] = arr[p2++];
+    }
+    for (i = 0; i < help.length; i++) {
+      arr[L + i] = help[i];
+    }
+    return res;
+  }
+  
+  2)与上题类似
+  
+  
+  
+4.快速排序 
+  前提知识：
+  1)已知一个数组和一个数，将数组中小于等于这个数的放左边，大于这个数的放右边
+   思路：a：arr[i] <= num, arr[i]和 “<=区域” 的下一个数交换， “<=区域” 右扩，i++；
+         b: arr[i] > num, i++;
+  2)已知一个数组和一个数，将数组中小于这个数的放左边，等于这个数的放中间，大于这个数的放右边(荷兰国旗问题)
+   思路：a：arr[i] < num, arr[i]和 “<区域” 的下一个数交换， “<区域” 右扩，i++；
+         b: arr[i] == num, i++;
+         c: arr[i] > num, arr[i]和 “>区域” 的上一个数交换， “>区域” 左扩，i不变；
+         d: “>区域” 和 i 相撞时结束
+         
