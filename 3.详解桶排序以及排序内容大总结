@@ -1,1 +1,161 @@
+1.堆排序(时间复杂度O(N*logN)，额外空间复杂度O(1))
+  代码：
+  public static void heapSort(int[] arr) {
+    if (arr == null || arr.length < 2) {
+      return;
+    }
+    for (int i = 0; i < arr.length; i++) {
+      heapInsert(arr, i);
+    }
+    int size = arr.length;
+    swap(arr, 0, --size);
+    while (size > 0) {
+      heapify(arr, 0, size);
+      swap(arr, 0, --size);
+    }
+  }
+  
+  //添加一个数时，从下往上重新构建大根堆
+  public static void heapInsert(int[] arr, int index) {
+    while (arr[index] > arr[index - 1] / 2) {
+      swap(arr, index, (index - 1) / 2);
+      index = (index - 1) / 2;
+    }
+  } 
+  
+  //交换第一个数和最后一个数后，执行的操作
+  //从上往下重新构建大根堆
+  public static void heapify(int[] arr, int index, int size) {
+    int left = index * 2 + 1;
+    while (left < size) {
+      int largest = left + 1 < size && arr[left + 1] > arr[left] ? left + 1 : left;
+      largest = arr[largest] > arr[index] ? largest : index;
+      if (largest == index) {
+        break;
+      }
+      swap(arr, largest, index);
+      index = largest;
+      left = index * 2 + 1;
+    }
+  }
+  
+  
+知识：Java中的优先级队列就是堆结构
+2.堆排序扩展题目
+  已知一个几乎有序的数组(几乎有序是指，如果把数组排好顺序的话，每个元素移动的距离可以不超过k，并且k相对于数组来说比较小)请选择一个合适的排序算法针对这个数据进行排序
+  代码：
+  public void sortedArrDistanceLessK(int[] arr, int k) {
+    PriorityQueue<Integer> heap = new PriorityQueue<>();
+    int index = 0;
+    for (; index < Math.min(arr.length, k); index++) {
+      heap.add(arr[index]);
+    }
+    int i = 0;
+    for (; index < arr.length; i++, index++) {
+      heap.add(arr[index]);
+      arr[i] = heap.poll();
+    } 
+    while (!heap.isEmpty()) {
+      arr[i++] = heap.poll();
+    }
+  }
+  
+  
 
+3.比较器
+  //返回负数的时候，第一个参数排在前面
+  //返回正数的时候，第二个参数排在前面
+  //返回0的时候，谁在前面无所谓
+  eg：
+  public static class IdAscendingComparator implements Comparator<Student> {
+    @Override
+    public int compare(Student o1, Student o2) {
+      return o1.id - o2.id;
+    }
+  }
+  
+  调用：Arrays.sort(students, new IdAscendingComparator());
+  
+  
+  
+4.桶排序(不基于比较的排序)
+  1)计数排序(只适用于数值和数据量非常小的情况)
+  2)基数排序(桶排序的一种)：要排的数据必须说明进制
+    代码解析可看同名视频最后二十分钟
+    
+  代码：
+  1)
+  public static void countSort(int[] arr) {
+    if (arr == null || arr.length < 2) {
+      return;
+    }
+    int max = Integer.MIN_VALUE;
+    for (int i = 0; i < arr.length; i++) {
+      max = Math.max(max, arr[i]);
+    }
+    int[] bucket = new int[max + 1];
+    for (int i = 0; i < arr.length; i++) {
+      bucket[arr[i]]++;
+    }
+    int i = 0; 
+    for (int j = 0; j < bucket.length; j++) {
+      while (bucket[j]-- > 0) {
+        arr[i++] = j;
+      }
+    }
+  }
+  
+  2)
+  public static void radixSort(int[] arr) {
+    if (arr == null || arr.length < 2) {
+      return;
+    }
+    radixSort(arr, 0, arr.length - 1, maxbits(arr));
+  }
+  
+  //获取数组中最大的数，判断其有几位(eg：12345，有5位)
+  public static int maxbits(int[] arr) {
+    int max = Integer.MIN_VALUE;
+    for (int i = 0; i < arr.length; i++) {
+      max = Math.max(max, arr[i]);
+    }
+    int res = 0;
+    while (max != 0) {
+      res++;
+      max /= 10;
+    }
+    return res;
+  }
+  
+  //获取一个数中某个位的值，如个位、十位、百位
+  public static int getDigit(int x, int d) {
+    return ((x / ((int)Math.pow(10, d - 1))) % 10);
+  }
+  
+  public static void radixSort(int[] arr, int begin, int end, int digit) {
+    final int radix = 10;
+    int i = 0, j = 0;
+    int[] bucket = new int[end - begin + 1]; //辅助数组，用于存放某个阶段排好序的数
+    for (int d = 1; d <= digit; d++) {
+      int[] count = new int[radix];
+      for (i = begin; i <= end; i++) {
+        j = getDigit(arr[i], d);
+        count[j]++;
+      }
+      //前缀和
+      for (i = 1; i < radix; i++) {
+        count[i] = count[i] + count[i - 1];
+      }
+      //从右往左遍历，从而实现先进先出
+      for (i = end; i >= begin; i--) {
+        j = getDigit(arr[i], d);
+        bucket[count[j] - 1] = arr[i];
+        count[j]--;
+      }
+      for (i = begin, j = 0; i <= end; i++, j++) {
+        arr[i] = bucket[j];
+      }
+    } 
+  }
+  
+  
