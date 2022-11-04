@@ -1,0 +1,389 @@
+面试时链表解题的方法论
+  1)对于笔试，不用太在乎空间复杂度，一切为了时间复杂度
+  2)对于面试，时间复杂度依然放在第一位，但是一定要找到空间最省的方法
+重要技巧：
+  1)额外数据结构记录(哈希表等)
+  2)快慢指针
+
+
+
+1.反转链表
+  public calss ReverseList {
+    public static class Node {
+      public int value;
+      public Node next;
+      public Node(int data) {
+        this.value = data;
+      }
+    }
+    
+    
+  }
+  
+  
+
+2.打印两个链表的有序部分
+  public static void printCommonPart(Node head1, Node head2) {
+    while (head1 != null && head2 != null) {
+      if (head1.value < head2.value) {
+        head1 = head1.next;
+      } else if (head1.value > head2.value) {
+        head2 = head2.next;
+      } else {
+        System.out.println(head1.value + " ");
+        head1 = head1.next;
+        head2 = head2.next;
+      }
+    }
+  }
+
+
+
+3.判断一个链表是不是回文链表
+  方法一：(需要N的额外空间)
+  遍历链表，然后将数据存入栈中，最后再遍历一次链表，比较是否与栈中数据相等
+  public static boolean isP(Node head) {
+    Stack<Node> stack = new Stack<>();
+    Node cur = head;
+    while (cur != null) {
+      stack.push(cur);
+      cur = cur.next;
+    }
+    while (head != null) {
+      if (head.value != stack.pop().value) {
+        return false;
+      }
+      head = head.next;
+    } 
+    return true;
+  }
+  
+  方法二：(需要N/2的额外空间)
+  使用快慢指针，快指针遍历到结尾时，慢指针刚好到达中间，然后再将慢指针后面的数存入栈中，再遍历N/2的链表即可
+  public static boolean isP(Node head) {
+    if (head == null || head.next == null) {
+      return true;
+    }
+    Node right = head.next;
+    Node cur = head;
+    while (cur.next != null && cur.next.next != null) {
+      right = right.next;
+      cur = cur.next.next;
+    }
+    Stack<Node> stack = new Stack<Node>();
+    while (right != null) {
+      stack.push(right);
+      right = right.next;
+    } 
+    while (!stack.isEmpty()) {
+      if (head.value != stack.pop().value) {
+        return false;
+      }
+      head = head.next;
+    }
+    return true;
+  }
+  
+  方法三：(需要O(1)的额外空间)
+  将右边部分的链表反转，然后同时遍历左边部分和右边部分，最后复原右边部分的链表
+  public static boolean isP(Node head) {
+    if (head == null || head.next == null) {
+      return true;
+    }
+    Node n1 = head;
+    Node n2 = head;
+    while (n2.next != null && n2.next.next != null) {
+      n1 = n1.next;  //n1到达中间
+      n2 = n2.next.next; //n2到达结尾
+    } 
+    n2 = n1.next; //右边部分的第一个节点
+    n1.next = null;
+    Node n3 = null;
+    while (n2 != null) {
+      n3 = n2.next;
+      n2.next = n1;
+      n1 = n2;
+      n2 = n3;
+    }
+    n3 = n1;
+    n2 = head;
+    boolean res = true;
+    
+  }
+  
+  
+  
+4.将单向链表按某值划分成左边小、中间相等、右边大的形式
+  方法一：遍历链表，将值存入数组中，将数组按照快排的partition排序，然后将数组中的数据弄到链表中
+  public static listP(Node head, int pivot) {
+    if (head == null) {
+      return head;
+    }
+    Node cur = head;
+    int i = 0;
+    while (cur != null) {
+      i++;
+      cur = cur.next;
+    }
+    Node[] nodeArr = new Node[i];
+    i = 0;
+    cur = head;
+    for (i = 0; i != nodeArr.length; i++) {
+      ndoeArr[i] = cur;
+      cur = cur.next;
+    }
+    arrPartition(nodeArr, pivot);
+    for (i = 1; i != nodeArr.length; i++) {
+      nodeArr[i - 1].next = nodeArr[i];
+    }
+    nodeArr[i - 1].next = null;
+    return nodeArr[0];
+  } 
+  
+  public static void arrPartition(Node[] nodeArr, int pivot) {
+    int small = -1;
+    int big = nodeArr.length;
+    int index = 0;
+    while (index != big) {
+      if (nodeArr[index].value < pivot) {
+        swap(nodeArr, ++small, index++);
+      } else if (nodeArr[index].value == pivot) {
+        index++;
+      } else {
+        swap(nodeArr, --big, index);
+      }
+    }
+  }
+  
+  方法二：定义六个变量，小于的头、小于的尾、等于的头、等于的尾、大于的头、大于的尾
+  public static Node listP(Node head, int pivot) {
+    Node sH = null; //小于的头
+    Node sT = null; //小于的尾
+    Node eH = null; //等于的头
+    Node eT = null; //等于的尾
+    Node bH = null; //大于的头
+    Node bT = null; //大于的尾
+    Node next = null;  //保存下一个节点
+    while (head != null) {
+      next = head.next;
+      head.next = null;
+      if (head.value < pivot) {
+        if (sH == null) {
+          sH = head;
+          sT = head;
+        } else {
+          sT.next = head;
+          sT = head;
+        }
+      } else if (head.value == pivot) {
+          if (eH == null) {
+            eH = head;
+            eT = head;
+          } else {
+            eT.next = head;
+            eT = head;
+          }
+      } else {
+        if (bH == null) {
+          bT.next = head;
+          bT = head;
+        }
+      }
+      head = next;
+    }
+    //将小于、等于、大于的三段连接起来
+    if (sT != null) {
+      sT.next = eH;
+      eT = eT == null ? sT : eT;
+    }
+    if (eT != null) {
+      eT.next = bH;
+    }
+    return sH != null ? sH : eH != null ? eH : bH;
+  }
+
+
+
+5.复制含有随机指针节点的链表
+  rand指针是单链表节点结构中新增的指针，rand可能指向链表中的任意一个节点，也可能指向null。给定一个由Node节点类型组成的无环单链表的头节点head，
+  请实现一个函数完成这个链表的复制，并返回复制的新链表的头节点。
+  
+  代码：
+  public class CopyListWithRandom {
+    public static class Node {
+      public int value;
+      public Node next;
+      public Node rand;
+      public Node(int data) {
+        this.value = data;
+      }
+    }
+    
+    //方法一：使用Map存放原节点与复制节点的关系
+    public static Node copyListWithRand1(Node head) {
+      HashMap<Node, Node> map = new HashMap<Node, Node>();
+      Node cur = head;
+      while (cur != null) {
+        map.put(cur, new Node(cur.value));
+        cur = cur.next;
+      }
+      cur = head;
+      while (cur != null) {
+        map.get(cur).next = map.get(cur.next);
+        map.get(cur).rand = map.get(cur.rand);
+        cur = cur.next;
+      } 
+      return map.get(head);
+    }
+    
+    //方法二：直接在原链表上复制节点
+    public static Node copyListWithRand2(Node head) {
+      if (head == null) {
+        return null;
+      }
+      Node cur = head;
+      Node next = null;
+      // 拷贝每一个节点放在原节点的后面
+      while (cur != null) {
+        next = cur.next;
+        cur.next = new Node(cur.value);
+        cur.next.next = next;
+        cur = next;
+      } 
+      cur = head;
+      Node curCopy = null;
+      // 拷贝每一个节点的rand
+      while (cur != null) {
+        next = cur.next.next;
+        curCopy = cur.next;
+        curCopy.rand = cur.rand != null ? cur.rand.next : null;
+        cur = next;
+      }
+      Node res = head.next;
+      cur = head;
+      
+      while (cur != null) {
+        next = cur.next.next;
+        curCopy = cur.next;
+        cur.next = next;
+        curCopy.next = next != null ? next.next : null;
+        cur = next;
+      }
+      return res;
+    }
+  } 
+  
+  
+  
+知识：判断一个链表是不是有环链表，找到第一个入环节点，如果无环，返回null(前提：数据不重复)
+  1)方法一：声明一个HashSet，遍历链表，将值放入HashSet中，若遍历到一个Set中已存在的数，则有环，该节点也为第一个入环节点
+  2)方法二：快慢指针，两个指针一起在起点，快指针一次走两步，慢指针一次走一步，两个指针相遇后，快指针回到起点，快指针一次走一步，慢指针一次走一步，再次相遇时便是第一个入环节点
+  
+6.两个单链表相交的一系列问题
+  给定两个可能有环也可能无环的单链表，头节点head1和head2。请实现一个函数，如果两个链表相交，请返回相交的 第一个节点。如果不相交，返回null
+  思路：
+  1)情况一：两个链表都无环，若相交，则是Y形状的
+    方法：
+    a)遍历链表1，获得链表长度和链表最后一个节点；遍历链表2，获得链表长度和链表最后一个节点；若最后一个节点是同一节点，则继续，否则返回null
+    b)两个链表长度相减(长-短)，长链表先走差值步，然后两个链表一起走，即可获得第一个相交节点，返回
+  2)情况二：一个链表有环，一个链表无环，则不可能相交
+  3)情况三：两个链表都有环，其中
+    a)情况a：形状“6 6”，两个链表不相交，返回null
+    b)情况b：两个链表的入环节点是同一个，则可以直接复用情况一中的方法
+    c)情况c：两个链表的入环节点不是同一个(蟹老板眼睛形状)，返回任意一条链表的入环节点都对(都可看做是第一个相交节点)
+    区分情况a、b、c：判断两个链表的入环节点，是同一个则是情况b；否则，遍历一条链表，若能遇到另一个链表的入环节点，则是情况c，否则是情况a
+    
+  代码：
+  public static Node getIntersectNode(Node head1, Node head2) {
+    if (head1 == null || head2 == null) {
+      return null;
+    }
+    Node loop1 = getLoopNode(head1);
+    Node loop2 = getLoopNode(head2);
+    //情况一
+    if (loop1 == null && loop2 == null) {
+      return noLoop(head1, head2);
+    }
+    //情况三
+    if (loop1 != null && loop2 != null) {
+      return bothLoop(head1, loop1, head2, loop2);
+    }
+    //情况二
+    return null;
+  }
+  
+  public static Node getLoopNode(Node head) {
+    //最少需要三个节点
+    if (head == null || head.next == null || head.next.next == null) {
+      return null;
+    }
+    Node n1 = head.next; //慢指针
+    Node n2 = head.next.next; //快指针
+    while (n1 != n2) {
+      if (n2.next == null || n2.next.next == null) {
+        return null;
+      }
+      n2 = n2.next.next;
+      n1 = n1.next;
+    }
+    n2 = head;  //快指针回到起点
+    while (n1 != n2) {
+      n1 = n1.next;
+      n2 = n2.next;
+    }
+    return n1;
+  }
+  
+  //情况一
+  public static Node noLoop(Node head1, Node head2) {
+    if (head1 == null || head2 == null) {
+      return null;
+    }
+    Node cur1 = head1;
+    Node cur2 = head2;
+    int n = 0;
+    while (cur1.next != null) {
+      n++;
+      cur1 = cur1.next;
+    } 
+    while (cur2.next != null) {
+      n--;
+      cur2 = cur2.next;
+    }
+    if (cur1 != cur2) {
+      return null;
+    } 
+    cur1 = n > 0 ? head1 : head2;
+    cur2 = cur1 == head1? head2 : head1;
+    n = Math.abs(n);
+    while (n != 0) {
+      n--;
+      cur1 = cur1.next;
+    }
+    while (cur1 != cur2) {
+      cur1 = cur1.next;
+      cur2 = cur2.next;
+    }
+    return cur1;
+  } 
+  
+  //情况三
+  public static Node bothLoop(Node head1, Node loop1, Node head2, Node loop2) {
+    Node cur1 = null;
+    Node cur2 = null;
+    if (loop1 == loop2) {
+      return noLoop(head1, head2);
+    } else {
+      cur1 = loop1.next;
+      while (cur1 != loop1) {
+        if (cur1 == loop2) {
+          return loop1;
+          //return loop2; 返回任意一个都行
+        }
+        cur1 = cur1.next;
+      }
+      return null;
+    }   
+  }
+  
+  
