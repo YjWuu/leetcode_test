@@ -1,0 +1,510 @@
+知识：二叉树递归套路(可以向左树要信息，向右树要信息的前提下，该套路可以解决一切树型dp的问题)
+  先确定要返回的类型(需要从左树获取什么信息，从右树获取什么信息，返回类型取这两者的全集)，然后直接使用套路
+  例子看判断一棵树是不是平衡二叉树，判断一棵树是不是搜索二叉树，判断一棵树是不是满二叉树
+  
+
+
+1.深度优先遍历
+  1)递归序：
+   递归方法遍历二叉树时，每一个节点都能遍历三次
+   eg：1 -< 2 3，遍历的顺序为 1 2 2 2 1 3 3 3 1
+   先序(头左右)：第一次遍历到的时候打印，后两次什么都不做
+   中序(左头右)：第二次遍历到的时候打印，其余两次什么都不做
+   后序(左右头)：第三次遍历到的时候打印，其余两次什么都不做
+   代码：
+   //先序
+   public static void preOrder(Node head) {
+    if (head == null) {
+      return;
+    }
+    System.out.println(head.value + " ");
+    preOrder(head.left);
+    preOrder(head.right);
+   }
+   
+   //中序
+   public static void inOrder(Node head) {
+    if (head == null) {
+      return;
+    }
+    inOrder(head.left);
+    System.out.println(head.value + " ");
+    inOrder(head.right);
+   }
+   
+   //后序同理
+  
+  
+   2)非递归序：
+    a)先序遍历：
+     ①准备一个栈，将头结点压入栈中
+     ②从栈中弹出一个节点cur
+     ③打印该cur
+     ④先压入右节点，再压入左节点(如果有的话，没有就什么都不做)
+     ⑤重复2~4步骤
+    代码：
+    public static void preOrder(Node head) {
+      if (head != null) {
+        Stack<Node> stack = new Stack<Node>();
+        stack.add(head);
+        while (!stack.isEmpty()) {
+          head = stack.pop();
+          System.out.println(head.value + " ");
+          if (head.right != null) {
+            stack.push(head.right);
+          }
+          if (head.left != null) {
+            stack.push(head.left);
+          }
+        } 
+      }
+    }
+    
+    b)中序遍历：
+     每棵子树，子树的左边界进栈，依次弹出的过程中，打印，对弹出节点的右树重复这个操作
+     代码：
+     public static void inOrder(Node head) {
+      if (head != null) {
+        Stack<Node> stack = new Stack<Node>();
+        while (!stack.isEmpty() || head != null) {
+          if (head != null) {
+            stack.push(head);
+            head = head.left;
+          } else {
+            head = stack.pop();
+            System.out.println(head.value + " ");
+            head = head.right;
+          }
+        } 
+      }
+     }  
+     
+    c)后序遍历：
+     ①准备两个栈，其中一个是收集栈，将头结点压入栈中
+     ②从栈中弹出一个节点cur
+     ③cur放入收集栈中
+     ④先压入左节点，再压入右节点(如果有的话，没有就什么都不做)
+     ⑤重复2~4步骤
+     ⑥弹出收集栈中数据，打印
+    代码：
+    public static void posOrder(Node head) {
+      if (head != null) {
+        Stack<Node> s1 = new Stack<Node>();
+        Stack<Node> s2 = new Stack<Node>();
+        s1.push(head);
+        while (!s1.isEmpty()) {
+          head = s1.pop();
+          s2.push(head);
+          if (head.left != null) {
+            s1.push(head.left);
+          } 
+          if (head.right != null) {
+            s1.push(head.right);
+          }   
+        }
+        while (!s2.isEmpty()) {
+          System.out.println(s2.pop().value + " ");
+        }
+      }
+    } 
+    
+   
+   
+2.宽度优先遍历：
+  准备一个队列，放入头结点，然后弹出，打印，先放弹出节点的左节点，再放右节点，重复操作
+  代码：
+  public static void width(Node head) {
+    if (head == null) {
+      return;
+    }
+    Queue<node> queue = new LinkedList<>();
+    queue.add(head);
+    while (!queue.isEmpty()) {
+      Node cur = queue.poll();
+      System.out.println(cur.value);
+      if (cur.left != null) {
+        queue.add(cur.left);
+      }
+      if (cur.right != null) {
+        queue.add(cur.right);
+      }
+    }
+  }
+    
+    
+    
+3.宽度优先遍历相关题目
+  求二叉树的最大宽度
+  public static int getMaxWidth(Node head) {
+    if (head == null) {
+      return 0;
+    }
+    int maxWidth = 0;
+    int curWidth = 0;
+    int curLevel = 0;
+    HashMap<Node, Integer> levelMap = new HashMap<>();
+    queue.add(head);
+    Node node = null;
+    Node left = null;
+    Node right = null;
+    while (!queue.isEmpty()) {
+      node = queue.poll();
+      left = node.left;
+      right = node.right;
+      if (left != null) {
+        levelMap.put(left, levelMap.get(node) + 1);
+        queue.add(left);
+      }
+      if (right != null) {
+        levelMap.put(right, levelMap.get(node) + 1);
+        queue.add(right);
+      }
+      if (levelMap.get(node) > curLevel) {
+        curWidth = 0;
+        curLevel = levelMap.get(node);
+      } else {
+        curWidth++;
+      }
+      maxWidth = Math.max(maxWidth, curWidth);
+    }
+    maxWidth = Math.max(maxWidth, curWidth);
+    return maxWidth;
+  }
+
+
+
+4.如何判断一棵树是不是搜索二叉树(对于每一棵子树，左树的节点都比他小，右树的节点都比他大)，经典的搜索二叉树一般没有重复值
+  思路：中序遍历，如果一直升序，则是搜索二叉树
+  
+  代码：
+  方法一：使用递归方法或者非递归方法，其实就是把打印行为替换成比较行为
+  public static int preValue = Integer.MIN_VALUE;
+  public static boolean isBST(Node head) {
+    if (head == null) {
+      return true;  //null树也是搜索二叉树
+    }
+    //判断左子树是不是搜索二叉树
+    boolean isLeftBst = isBST(head.left);
+    if (!isLeftBst) {
+      return false;
+    }
+    //判断是否升序
+    if (head.value <= preValue) {
+      return false;
+    } else {
+      preValue = head.value;
+    }
+    //判断右子树是不是搜索二叉树
+    return isBST(head.right);
+  } 
+  
+  方法二：使用二叉树递归套路
+    思路：
+    1)左子树是搜索二叉树
+    2)右子树是搜索二叉树
+    3)左子树的最大值小于head的值
+    4)右子树的最小值大于head的值
+  public static class isBST {
+    public static class ReturnType {
+      public boolean isBst;
+      public int min;
+      public int max;
+      public ReturnType(boolean is, int mi, int ma) {
+        isBst = is;
+        min = mi;
+        max = ma;
+      }
+    } 
+    
+    public static ReturnType process(Node x) {
+      if (x == null) {
+        return null;
+      }  
+      ReturnType leftData = process(x.left);
+      ReturnType rightData = process(x.right);
+      int min = x.value;
+      int max = x.value;
+      if (leftData != null) {
+        min = Math.min(min, leftData.min);
+        max = Math.max(max, leftData.max);
+      }
+      if (rightData != null) {
+        min = Math.min(min, rightData.min);
+        max = Math.max(max, rightData.max);
+      }
+      boolean isBST = true;
+      if (leftData != null && (!leftData.isBST || leftData.max >= x.value)) {
+        isBST = false;
+      }
+      if (rightData != null && (!rightData.isBST || x.value >= rightData.min)) {
+        isBST = false;
+      }
+      return new ReturnType(isBST, min, max);
+    }
+  }
+  
+  
+  
+5.判断一棵树是不是完全二叉树
+  思路：
+    1)任一节点，有右节点无左节点，返回false
+    2)在1)不违规的条件下，如果遇到了第一个左右子节点不全的节点，后续的节点必须都是叶节点
+   
+  代码： //宽度优先遍历二叉树
+  public static boolean isCBT(Node head) {
+    if (head == null) {
+      return true;
+    }
+    LinkedList<Node> queue = new LinkedList<>();
+    boolean leaf = false; //判断有没有左右节点不双全的节点
+    Node l = null;
+    Node r = null;
+    queue.add(head);
+    while (!queue.isEmpty()) {
+      head = queue.poll();
+      l = head.left;
+      r = head.right;
+      if ((leaf && (l != null || r != null) //在遇到了左右节点不双全的节点后，有些后续节点不是叶节点
+           ||
+          (l == null && r != null) { //有右节点无左节点，直接返回null
+         return false; 
+      }
+      if (l != null) {
+        queue.add(l);
+      }
+      if (r != null) {
+        queue.add(r);
+      } else {
+        leaf = true; //遇到了左右节点不双全的节点
+      }
+    } 
+  }
+  
+  
+  
+6.判断一棵树是不是满二叉树
+  思路：使用二叉树递归套路，获得高度，节点数，直接根据公式判断
+  public static class isFullTree {
+    public static class ReturnType {
+      public int height; //高度
+      public int nodes; //有多少个节点
+      public ReturnType(int h, int n) {
+        height = h;
+        nodes = n;
+      }
+    }
+    
+    public static ReturnType process(Node x) {
+      if (x == null) {
+        return new ReturnType(0, 0);
+      }
+      ReturnType leftData = process(x.left);
+      ReturnType rightData = process(x.right);
+      int height = Math.max(leftData.height, rightData.height) + 1;
+      int nodes = Math.max(leftData.nodes, rightData.nodes) + 1;
+      return new ReturnType(height, nodes);
+    }
+    
+    public static boolean isFull(Node head) {
+      if (head == null) {
+        return true;
+      } 
+      ReturnType data = process(head);
+      return data.nodes == (1 << data.height - 1); 
+    }
+  }
+
+
+
+7.判断一棵树是不是平衡二叉树(对于每一棵子树，左树与右树的高度差不能超过1)
+  思路：使用二叉树递归套路
+    1)左子树必须是平衡二叉树
+    2)右子树必须是平衡二叉树
+    3)左右子树高度差不超过1
+   
+  代码：
+  public class isBalancedTree {
+    //需要返回的类型
+    public static class ReturnType {
+      public boolean isBalanced;
+      public int height;
+      public ReturnType(boolean isB, int hei) {
+        isBalanced = isB;
+        height = hei;
+      } 
+    }
+    
+    public static boolean isBalanced(Node head) {
+      return process(head).isBalanced;
+    }
+    
+    public static ReturnType process(Node x) {
+      if (x == null) {
+        return new ReturnType(true, 0);
+      } 
+      ReturnType leftData = process(x.left);
+      ReturnType rightData = process(x.right);
+      int height = Math.max(leftData.height, rightData.height);
+      boolean isBalanced = leftData.isBalanced && rightData.isBalanced &&
+                           Math.abs(leftData.height - rightData.height) < 2;
+      return new ReturnType(isBalanced, height);
+    }
+  } 
+  
+
+
+8.返回两个节点的最低公共祖先
+  方法一：声明一个HashMap，使得每一个节点都能找到它的父节点，然后再声明一个HashSet，存放o1的所有祖先节点，然后再遍历o2的所有祖先节点，与set中数据比较，最先相等的即是
+  代码：
+  public static Node lca(Node head, Node o1, Node o2) {
+    HashMap<Node, Node> fatherMap = new HashMap<>();
+    fatherMap.put(head, head);
+    process(head, fatherMap);
+    HashSet<Node> set1 = new HashSet<>();
+    Node cur = o1;
+    while (cur != fatherMap.get(cur)) { //不为头结点
+      set1.add(cur);
+      cur = fatherMap.get(cur);
+    }
+    set1.add(head);
+    cur = o2;
+    while (cur != fatherMap.get(cur)) {
+      if (set1.contains(cur)) {
+        return cur;
+      }
+      cur = fatherMap.get(cur);
+    }
+    return head;
+  }
+  
+  public static void process(Node head, HashMap<Node, Node> fatherMap) {
+    if (head == null) {
+      return;
+    }
+    fatherMap.put(head.left, head);
+    fatherMap.put(head.right, head);
+    process(head.left, fatherMap);
+    process(head.right, fatherMap);
+  } 
+  
+  方法二：(经过多种优化后获得，争取理解)
+   1)情况一：o1是o2的LCA，或o2是o1的LCA
+   2)情况二：o1和o2不互为LCA，向上找
+  public static Node lowestAncestor(Node head, Node o1, Node o2) {
+    if (head == null || head == o1 || head == o2) {
+      return head; //base case，直接返回head
+    }
+    Node left = lowestAncestor(head.left, o1, o2);
+    Node right = lowestAncestor(head.right, o1, o2);
+    if (left != null && right != null) { //情况一不可能满足
+      return head;
+    }
+    //左右两棵树，并不都有返回值
+    return left != null ? left : right;
+  }
+  
+  
+  
+9.在二叉树中找到一个节点的后继节点(后继节点：中序遍历中，一个节点的下一个节点；前驱节点：中序遍历中，一个节点的上一个节点)
+  现在有一种新的二叉树节点类型如下:
+  public class Node {
+    public int value;
+    public Node left;
+    public Node right;
+    public Node parent;
+    public Node(int val) {
+      value = val;
+    }
+  }
+
+  思路：
+    1)情况一：x有右树的时候，x的后继节点就是右树的最左节点
+    2)情况二：x无右树的时候，x一直往上，判断是不是上一个节点的左节点，若是，则上一个节点就是x的后继节点
+    3)最后一个节点没有后继节点
+  代码：
+  //获取一棵树最左节点
+  public static Node getLeftMost(Node node) {
+    if (node == null) {
+      return node;
+    }
+    while (node.left != null) {
+      node = node.left;
+    }
+    return node;
+  }
+  
+  public static Node getSuccessorNode(Node node) {
+    if (node == null) {
+      return node;
+    }
+    if (node.right != null) { //情况一
+      return getLeftMost(node.right);
+    } else { //情况二
+      Node parent = node.parent;
+      while (parent != null && parent.left != node) {
+        node = parent;
+        parent = node.parent;
+      }
+      return parent;
+    } 
+  } 
+   
+   
+   
+10.二叉树的序列化和反序列化(就是内存里的一棵树如何变成字符串形式，又如何从字符串形式变成内存里的数)
+  代码：
+  //先序遍历方式序列化
+  public static String serialByPre(Node head) {
+    if (head == null) {
+      return "#!";
+    }
+    String res =  head.value + "!";
+    res += serialByPre(head.left);
+    res += serialByPre(head.right);
+    return res;
+  }
+  
+  //反序列化
+  public static Node reconByPreString(String preStr) {
+    String[] values = preStr.split("!");
+    Queue<String> queue = new LinkedList<String>();
+    for (int i = 0; i != vlaues.length; i++) {
+      queue.offer(values[i]);
+    }
+    return reconPreOrder(queue);
+  }
+  public static Node reconPreOrder(Queue<String> queue) {
+    String value = queue.poll();
+    if (value.equals("#")) {
+      return null;
+    }
+    Node head = new Node(Integer..valueOf(value));
+    head.left = reconPreOrder(queue);
+    head.right = reconPreOrder(queue);
+    return head;
+  }
+  
+  
+  
+11.折纸问题
+请把一段纸条竖着放在桌子上，然后从纸条的下边向上方对折1次，压出折痕后展开。
+此时折痕是凹下去的，即折痕突起的方向指向纸条的背面。
+如果从纸条的下边向上方连续对折2次，压出折痕后展开，此时有三条折痕，从上到下依次是下折痕、下折痕和上折痕。
+给定一个输入参数N，代表纸条都从下边向上方连续对折N次。
+请从上到下打印所有折痕的方向。
+例如:N=1时，打印: down N=2时，打印: down down up
+
+代码：
+public static void printAllFolds(int N) {
+  printProcess(1, N, true);
+}
+
+//递归过程，来到了某一个节点，i是节点的层数，N是一共的层数，down == true 为凹， down == false 为凸
+public static void printProcess(int i, int N, boolean down) {
+  if (i > N) {
+    return;
+  }
+  printProcess(i + 1, N, true);
+  System.out.println(down ? "凹" : "凸");
+  printProcess(i + 1, N, false);
+}
