@@ -1,0 +1,314 @@
+知识：
+  表达图的方式：邻接矩阵、邻接表
+  直接熟记模板的格式，之后遇到结构不同的图，将其转换为已熟悉的格式
+  
+  代码：
+  图：
+  public class Graph {
+    public HashMap<Integer, Node> nodes;  //点集
+    public HashSet<Edge> edges; //边集
+    public Graph() {
+      nodes = new HashMap<>();
+      edges = new HashSet<>();
+    }
+  }
+  
+  点：
+  public class Node {
+    public int value; //值
+    public int in; //入度
+    public int out; //出度
+    public ArrayList<Node> nexts; //可到达的下一个点
+    public ArrayList<Edge> edges; //连接的边
+    public Node(int value) {
+      this.value = value;
+      in = 0;
+      out = 0;
+      nexts = new ArrayList<>();
+      edges = new ArrayList<>();
+    } 
+  }
+  
+  边：
+  public class Edge {
+    public int weight; //权值
+    public Node from; //从哪个点来的
+    public Node to; //去哪个点
+    public Edge(int weight, Node from, Node to) {
+      this.weight = weight;
+      this.from = from;
+      this.to = to;
+    } 
+  }
+  
+  转换图的类：(将所给图的格式改为上面的格式)
+  自己根据实际情况编写，下面是例子
+  public static Graph createGraph(Integer[][] matrix) {
+    Graph graph = new Graph();
+    for (int i = 0; i < matrix.length; i++) {
+      Integer from = matrix[i][0];
+      Integer to = matrix[i][1];
+      Integer weight = matrix[i][2];
+      if (!graph.nodes.containsKey(from)) {
+        graph.nodes.put(from, new Node(from));
+      }
+      if (!graph.nodes.containsKey(to)) {
+        graph.nodes.put(to, new Node(to));
+      }
+      Node fromNode = graph.nodes.get(from);
+      Node toNode = graph.nodes.get(to);
+      Edge newEdge = new Edge(weight, fromNode, toNode);
+      fromNode.nexts.add(toNode);
+      fromNode.out++;
+      toNode.in++;
+      fromNode.edges.add(newEdge);
+      graph.edges.add(newEdge);
+    }
+    return graph;
+  }
+  
+  
+  
+1.图的宽度优先遍历
+  1)利用队列实现
+  2)从源节点开始依次按照宽度进队列，然后弹出
+  3)每弹出一个点，把该节点所有没有进过队列的邻接点放入队列
+  4)直到队列变空
+  
+  代码：
+  public static void bfs(Node node) {
+    if (node == null) {
+      return;
+    }
+    Queue<Node> queue = new LinkedList<>();
+    HashSet<Node> set = new HashSet<>();
+    queue.add(ndoe);
+    set.add(node);
+    while (!queue.isEmpty()) {
+      Node cur = queue.poll();
+      System.out.println(cur.value);
+      for (Node next : cur.nexts) {
+        if (!set.contains(next)) {
+          set.add(next);
+          queue.add(next);
+        }
+      }
+    } 
+  }
+  
+  
+  
+2.图的深度优先遍历
+  1)利用栈实现
+  2)从源节点开始把节点按照深度放入栈，然后弹出
+  3)每弹出一个点，把该节点下一个没有进过栈的邻接点放入栈
+  4)直到栈变空
+  
+  代码：
+  public static void dfs(Node node) {
+    if (node == null) {
+      return;
+    }
+    Stack<Node> stack = new Stack<>();
+    HashSet<Node> set = new HashSet<>();
+    stack.add(node);
+    set.add(node);
+    System.out.println(node.value);
+    while (!stack.isEmpty()) {
+      Node cur = stack.pop();
+      for (Node next : cur.nexts) {
+        if (!set.contains(next)) {
+          stack.push(cur);
+          stack.push(next);
+          set.add(next);
+          System.out.println(next.value);
+          break;
+        }
+      } 
+    }
+  }
+  
+  
+  
+3.拓扑排序(要求有向图，且有入度为0的节点，且没有环)
+  1)先看入度为0的点，打印
+  2)删除入度为0的点及其影响
+  3)重复操作
+  
+  代码：
+  public static List<Node> sortedTopology(Graph graph) {
+    HashMap<Node, Integer> inMap = new HashMap<>();
+    Queue<Node> zeroInQueue = new LinkedList<>();
+    for (Node node : graph.nodes().values()) {
+      inMap.put(node, node.in);
+      if (node.in == 0) {
+        zeroInQueue.add(node);
+      }
+    }
+    List<Node> result = new ArrayList<>();
+    while (!zeroInQueue.isEmpty()) {
+      Node cur = zeroInQueue.poll();
+      result.add(cur);
+      for (Node next : cur.nexts) {
+        inMap.put(next, inMap.get(next) - 1);
+        if (inMap.get(next) == 0) {
+          zeroInQueue.add(next);
+        }
+      }
+    }
+    return result;
+  }
+  
+  
+  
+4.kruskal算法(要求无向图，作用是求最小生成树)
+  思路：按照边权值由小到大排序，然后依次将边的两点放入并查集中，判断
+  
+  代码：
+  //并查集
+  public static class UnionFind {
+    private HashMap<Node, Node> fatherMap;
+    private HashMap<Node, Integer> rankMap;
+    public UnionFind() {
+      fatherMap = new HashMap<Node, Node>();
+      rankMap = new HashMap<Node, Integer>();
+    } 
+    private Node findFather(Node n) {
+      Node father = fatherMap.get(n);
+      if (father != n) {
+        father = findFather(father);
+      }
+      fatherMap.put(n, father);
+      return father;
+    }
+    public void makeSets(Collection<Node> nodes) {
+      fatherMap.clear();
+      rankMap.clear();
+      for (Node node : nodes) {
+        fatherMap.put(node, node);
+        rankMap.put(node, 1);
+      }
+    } 
+    public boolean isSameSet(Node a, Node b) {
+      return findFather(a) == findFather(b);
+    } 
+    public void union(Node a, Node b) {
+      if (a == null || b == null) {
+        return;
+      }
+      Node aFather = findFather(a);
+      Node bFather = findFather(b);
+      if (aFather != bFather) {
+        int aFrank = rankMap.get(aFather);
+        int bFrank = rankMap.get(bFather);
+        if (aFrank <= bFrank) {
+          fatherMap.put(aFather, bFather);
+          rankMap.put(bFather, aFrank + bFrank);
+        } else {
+          fatherMap.put(bFather, aFather);
+          rankMap.put(aFather, aFrank + bFrakn);
+        }
+      }
+    } 
+  }   
+  
+  public static class EdgeComparator implements Comparator<Edge> {
+    @Override
+    public int compare(Edge o1, Edge o2) {
+      return o1.weight - o2.weight;
+    }
+  }
+  
+  public static Set<Edge> kruskal(Graph graph) {
+    UnionFind unionFind = new UnionFind();
+    unionFind.makeSets(graph.nodes.values());
+    PriorityQueue<Edge> priorityQueue = new PriorityQueue<>(new EdgeComparator());
+    for (Edge edge : graph.edges) {
+      priorityQueue.add(edge);
+    } 
+    Set<Edge> result = new HashSet<>();
+    while (!priorityQueue.isEmpty()) {
+      Edge edge = priorityQueue.poll();
+      if (!unionFind.isSameSet(edge.from, edge.to)) {
+        result.add(edge);
+        unionFind.union(edge.from, edge.to);
+      }
+    }
+    return result;
+  }
+
+
+
+5.prim算法(要求无向图，作用是求最小生成树)
+  代码：
+  public static class EdgeComparator implements Comparator<Edge> {
+    @Override
+    public int compare(Edge o1, Edge o2) {
+      return o1.weight - o2.weight; //小到大
+    }
+  }
+  
+  public static Set<Edge> primMST(Graph graph) {
+    PriorityQueue<Edge> priorityQueue = new PriorityQueue<>(new EdgeComparator()); //小根堆，存放边
+    HashSet<Node> set = new HashSet<>();
+    Set<Edge> result = new HashSet<>();
+    for (Node node : graph.nodes.values()) { //使用for循环是为了防止遇到森林的情况，即不连通)
+      if (!set.contains(node)) {
+        set.add(node);
+        for (Edge edge : nodes.edges) {
+          priorityQueue.add(edge);
+        }
+        while (!priorityQueue.isEmpty()) {
+          Edge edge = priorityQueue.poll();
+          Node toNode = edge.to;
+          if (!set.contains(toNode)) {
+            set.add(toNode);
+            result.add(edge);
+            for (Edge nextEdge : toNode.edges) {
+              priorityQueue.add(nextEdge);
+            }
+          }
+        }
+        
+      } 
+    }
+  }
+
+
+6.Dijkstra算法(要求没有权值为负数的边，作用是求出最小距离的集)
+  代码：
+  public static Node getMinDistanceAndUnselectedNode(HashMap<Node, Integer> distanceMap, HashSet<Node> touchedNodes) {
+    Node minNode = null;
+    int minNode = Integer.MAX_VALUE;
+    for (Entry<Node, Integer> entry : distanceMap.entryset()) {
+      Node node = entry.getKey();
+      int distance = entry.getValue();
+      if (!touchedNodes.contains(node) && distance < minDistance) {
+        minNode = node;
+        minDistance = distance;
+      }
+    } 
+    return minNode;
+  } 
+  
+  public static HashMap<Node, Integer> dijkstra(Node head) {
+    HashMap<Node, Integer> distanceMap = new HashMap<>();
+    distanceMap.put(head, 0);
+    HashSet<Node> selectedNodes = new HashSet<>();
+    Node minNode = getMinDistanceAndUnselectedNode(distanceMap, selectedNodes);
+    while (minNode != null) {
+      int distance = distanceMap.get(minNode);
+      for (Edge edge : minNode.edges) {
+        Node toNode = edge.to;
+        if (!distanceMap.containsKey(toNode)) {
+          distanceMap.put(toNode, distance + edge.weight);
+        } else {
+          distanceMap.put(toNode, Math.min(distanceMap.get(toNode), distance + edge.weight));
+        }
+      }
+      selectedNodes.add(minNode);
+      minNode = getMinDistanceAndUnselectedNode(distanceMap, selectedNodes);
+    } 
+    return distanceMap;
+  }
+  
