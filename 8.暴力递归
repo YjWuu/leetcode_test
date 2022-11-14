@@ -1,0 +1,217 @@
+暴力递归就是尝试
+  1)把问题转化为规模缩小了的同类问题的子问题
+  2)有明确的不需要继续进行递归的条件(base case)
+  3)有当得到了子问题的结果之后的决策过程
+  4)不记录每一个子问题的解
+  
+  
+  
+1.汉诺塔问题
+  打印n层汉诺塔从最左边移动到最右边的全部过程
+  代码：
+  public static viod hanoi(int n) {
+    if (n > 0) {
+      func(n, n, "left", "mid", "right");
+    }
+  } 
+  public static void func(int rest, int down, String from, String help, String to) {
+    if (rest == 1) {
+      System.out.println("move" + down + "from" + from + "to" + to);
+    } else {
+      func(rest - 1, down - 1, from, to, help);
+      func(1, down, from, help, to);
+      func(rest - 1, down - 1, help, from, to);
+    }
+  }
+  
+  
+  
+2.打印一个字符串的全部子序列，包括空字符串
+  代码：
+  public static void printAll(String str) {
+    char[] chs = str.toCharArray();
+    process(chs, 0);;
+  }
+  
+  public static void process(char[] chs, int i) {
+    if (i == chs.length) {
+      System.out.println(String.valueOf(chs));
+      return;
+    }
+    process(chs, i + 1);
+    char tmp = chs[i];
+    chs[i] = 0;
+    process(chs, i + 1);
+    chs[i] = tmp;
+  }
+
+
+
+3.打印一个字符串的全部排列
+  打印一个字符串的全部排列，要求不要出现重复的排列
+  代码：
+  public static ArrayList<String> Permutation(String str) {
+    ArrayList<String> res = new ArrayList<>();
+    if (str == null || str.length() == 0) {
+      return res;
+    }
+    char[] chs = str.toCharArray();
+    process(chs, 0, res);
+    res.sort(null);
+    return res;
+  }
+  
+  public static void process(char[] chs, int i, ArrayList<String> res) {
+    if (i == chs.length) {
+      res.add(String.valueOf(chs));
+    }
+    boolean[] vis = new boolean[26];
+    for (int j = i; j < chs.length; j++) {
+      if (!visit[chs[j] - 'a']) {
+        visit[chs[j] - 'a'] = true;
+        swap(chs, i, j);
+        process(chs, i + 1, res);
+        swap(chs, i, j);
+      }
+    } 
+  } 
+
+
+
+4.给你一个栈，请你逆序这个栈，不能申请额外的数据结构，只能使用递归函数。
+  代码：
+  public static void reverse(Stack<Integer> stack) {
+    if (stack.isEmpty()) {
+      return;
+    }
+    int i = getAndRemoveLastElement(stack);
+    reverse(stack);
+    stack.push(i);
+  }
+  
+  public static int getAndRemoveLastElement(Stack<Integer> stack) {
+    int result = stack.pop();
+    if (stack.isEmpty()) {
+      return result;
+    } else {
+      int last = getAndRemoveLastElement(stack);
+      stack.push(result);
+      return last;
+    }
+  } 
+  
+
+
+5.规定1和A对应、2和B对应、3和C对应... 那么一个数字字符串比如"111"，就可以转化为"AAA"、"KA"和"AK"。
+  给定一个只有数字字符组成的字符串str，返回有多少种转化结果。
+  代码：
+  public static int number(String str) {
+    if (str == null || str.length() == 0) {
+      return 0;
+    }
+    return process(str.toCharArray(), 0);
+  }
+  
+  public static int process(char[] chs, int i) {
+    if (i == chs.length) {
+      return 1;
+    } 
+    if (chs[i] == '0') {
+      return 0;
+    }
+    if (chs[i] == '1') {
+      int res = process(chs, i + 1);
+      if (i + 1 < chs.length) {
+        res += process(chs, i + 2);
+      }
+      return res;
+    }
+    if (chs[i] == '2') {
+      int res = process(chs, i + 1);
+      if (i + 1 < chs.length && (chs[i + 1] >= '0' && chs[i + 1] <= '6')) {
+        res += process(chs, i + 2);
+      }
+      return res;
+    }
+    return process(chs, i + 1);
+  }
+  
+  
+  
+6.给定两个长度都为N的数组weights和values，weights[i]和values[i]分别代表i号物品的重量和价值。给定一个正数bag，表示一个载重bag的袋子，你装的物
+  品不能超过这个重量。返回你能装下最多的价值是多少？
+  代码：
+  public static int maxValue(int[] c, int[] p, int bag) {
+    int[][] dp = new int[c.length + 1][bag + 1];
+    for (int i = c.length - 1; i >= 0; i--) {
+      for (int j = bag; j >= 0; j--) {
+        dp[i][j] = dp[i + 1][j];
+        if (j + c[i] <= bag) {
+          dp[i][j] = Math.max(dp[i][j], p[i + 1][j + c[i]]);
+        }
+      } 
+    }
+    return dp[0][0];
+  }
+  
+  
+ 
+7.给定一个整型数组arr，代表数值不同的纸牌排成一条线。玩家A和玩家B依次拿走每张纸牌，规定玩家A先拿，玩家B后拿，但是每个玩家每次只能拿走最左或最右的纸牌，玩家A
+  和玩家B都绝顶聪明。请返回最后获胜者的分数。
+  代码：
+  public static int win1(int[] arr) {
+		if (arr == null || arr.length == 0) {
+			return 0;
+		}
+		return Math.max(f(arr, 0, arr.length - 1), s(arr, 0, arr.length - 1));
+	}
+
+	public static int f(int[] arr, int i, int j) {
+		if (i == j) {
+			return arr[i];
+		}
+		return Math.max(arr[i] + s(arr, i + 1, j), arr[j] + s(arr, i, j - 1));
+	}
+
+	public static int s(int[] arr, int i, int j) {
+		if (i == j) {
+			return 0;
+		}
+		return Math.min(f(arr, i + 1, j), f(arr, i, j - 1));
+	}
+  
+  
+  
+8.N皇后问题是指在N*N的棋盘上要摆N个皇后，要求任何两个皇后不同行、不同列，也不在同一条斜线上。
+  给定一个整数n，返回n皇后的摆法有多少种。
+ 代码：
+ public static int num1(int n) {
+		if (n < 1) {
+			return 0;
+		}
+		int[] record = new int[n];
+		return process1(0, record, n);
+	}
+
+	public static int process1(int i, int[] record, int n) {
+		if (i == n) {
+			return 1;
+		}
+		int res = 0;
+		for (int j = 0; j < n; j++) {
+			if (isValid(record, i, j)) {
+				record[i] = j;
+				res += process1(i + 1, record, n);
+			}
+		}
+		return res;
+	}
+
+	public static boolean isValid(int[] record, int i, int j) {
+		for (int k = 0; k < i; k++) {
+			if (j == record[k] || Math.abs(record[k] - j) == Math.abs(i - k)) {
+				return false;
+			}
+		}
+		return true;
+	}
